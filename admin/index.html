@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetCare+ 관리자 대시보드</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card .label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            color: #667eea;
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        .stat-card .trend {
+            color: #10b981;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            position: sticky;
+            top: 0;
+        }
+
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #666;
+        }
+
+        table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge.admin {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge.user {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: #5568d3;
+            transform: scale(1.05);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #fee;
+            color: #c00;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .insurance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .insurance-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .insurance-card h3 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .insurance-card .price {
+            color: #667eea;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .insurance-card .coverage {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        #conversationsChart {
+            max-height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🐾 PetCare+ 관리자 대시보드</h1>
+            <p>실시간 통계 및 데이터 관리 · 마지막 업데이트: <span id="lastUpdate">로딩 중...</span></p>
+        </div>
+
+        <!-- Error Display -->
+        <div id="errorDisplay" style="display: none;" class="error"></div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="label">총 대화 수</div>
+                <div class="value" id="totalConversations">-</div>
+                <div class="trend">▲ 실시간 데이터</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">오늘 대화 수</div>
+                <div class="value" id="todayConversations">-</div>
+                <div class="trend">▲ 오늘</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">관리자 대화</div>
+                <div class="value" id="adminConversations">-</div>
+                <div class="trend">관리자 모드</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">보험 상품 수</div>
+                <div class="value" id="totalInsurance">-</div>
+                <div class="trend">11개 보험사</div>
+            </div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Conversations Table -->
+            <div class="card">
+                <h2>
+                    💬 최근 대화 기록
+                    <button class="refresh-btn" onclick="loadData()" style="float: right;">새로고침</button>
+                </h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>시간</th>
+                                <th>유형</th>
+                                <th>사용자 메시지</th>
+                                <th>AI 응답</th>
+                            </tr>
+                        </thead>
+                        <tbody id="conversationsTable">
+                            <tr>
+                                <td colspan="4" class="loading">데이터 로딩 중...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="card">
+                <h2>📊 대화 추세</h2>
+                <canvas id="conversationsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Insurance Data -->
+        <div class="card">
+            <h2>🏥 보험 상품 현황</h2>
+            <div id="insuranceGrid" class="insurance-grid">
+                <div class="loading">데이터 로딩 중...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase 초기화
+        const SUPABASE_URL = 'https://cpejxlvbvyipkmthgwfq.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwZWp4bHZidnlpcGttdGhnd2ZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg5NzcxNzIsImV4cCI6MjA1NDU1MzE3Mn0.sb_pub1t4bigJeHD1oMK0VQ0IrzJuk_DGAvL';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let conversationsChart = null;
+
+        // 데이터 로드
+        async function loadData() {
+            try {
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleString('ko-KR');
+
+                // 통계 로드
+                await loadStats();
+
+                // 대화 기록 로드
+                await loadConversations();
+
+                // 보험 데이터 로드
+                await loadInsurance();
+
+                // 차트 로드
+                await loadChart();
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showError('데이터 로드 실패: ' + error.message);
+            }
+        }
+
+        // 통계 로드
+        async function loadStats() {
+            // 총 대화 수
+            const { count: totalCount } = await supabase
+                .from('conversations')
+                .select('*', { count: 'exact', head: true });
+            
+            document.getElementById('totalConversations').textContent = totalCount || 0;
+
+            // 오늘 대화 수
+            const today = new Date().toISOString().split('T')[0];
+            const { count: todayCount } = await supabase
+                .from('conversations')
+                .select('*', { count: 'exact', head: true })
+                .gte('created_at', today);
+            
+            document.getElementById('todayConversations').textContent = todayCount || 0;
+
+            // 관리자 대화 수
+            const { count: adminCount } = await supabase
+                .from('conversations')
+                .select('*', { count: 'exact', head: true })
+                .eq('is_admin', true);
+            
+            document.getElementById('adminConversations').textContent = adminCount || 0;
+
+            // 보험 상품 수
+            const { count: insuranceCount } = await supabase
+                .from('insurance_data')
+                .select('*', { count: 'exact', head: true });
+            
+            document.getElementById('totalInsurance').textContent = insuranceCount || 0;
+        }
+
+        // 대화 기록 로드
+        async function loadConversations() {
+            const { data, error } = await supabase
+                .from('conversations')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(20);
+
+            if (error) {
+                throw error;
+            }
+
+            const tbody = document.getElementById('conversationsTable');
+            
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="loading">아직 대화 기록이 없습니다</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map(conv => `
+                <tr>
+                    <td>${new Date(conv.created_at).toLocaleString('ko-KR')}</td>
+                    <td><span class="badge ${conv.is_admin ? 'admin' : 'user'}">${conv.is_admin ? '관리자' : '일반'}</span></td>
+                    <td>${conv.message ? conv.message.substring(0, 50) + (conv.message.length > 50 ? '...' : '') : '-'}</td>
+                    <td>${conv.response ? conv.response.substring(0, 50) + (conv.response.length > 50 ? '...' : '') : '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        // 보험 데이터 로드
+        async function loadInsurance() {
+            const { data, error } = await supabase
+                .from('insurance_data')
+                .select('*')
+                .order('company');
+
+            if (error) {
+                throw error;
+            }
+
+            const grid = document.getElementById('insuranceGrid');
+            
+            if (!data || data.length === 0) {
+                grid.innerHTML = '<div class="loading">보험 데이터가 없습니다</div>';
+                return;
+            }
+
+            grid.innerHTML = data.map(ins => `
+                <div class="insurance-card">
+                    <h3>${ins.company}</h3>
+                    <div class="price">${(ins.price_min || 0).toLocaleString()}원 - ${(ins.price_max || 0).toLocaleString()}원/월</div>
+                    <div class="coverage">${ins.coverage || '-'}</div>
+                </div>
+            `).join('');
+        }
+
+        // 차트 로드
+        async function loadChart() {
+            // 최근 7일 데이터
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+            const { data } = await supabase
+                .from('conversations')
+                .select('created_at')
+                .gte('created_at', sevenDaysAgo.toISOString());
+
+            // 날짜별 그룹화
+            const dateCount = {};
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                dateCount[dateStr] = 0;
+            }
+
+            if (data) {
+                data.forEach(conv => {
+                    const date = conv.created_at.split('T')[0];
+                    if (dateCount.hasOwnProperty(date)) {
+                        dateCount[date]++;
+                    }
+                });
+            }
+
+            const labels = Object.keys(dateCount).map(date => {
+                const d = new Date(date);
+                return `${d.getMonth() + 1}/${d.getDate()}`;
+            });
+            const values = Object.values(dateCount);
+
+            // 기존 차트 삭제
+            if (conversationsChart) {
+                conversationsChart.destroy();
+            }
+
+            // 새 차트 생성
+            const ctx = document.getElementById('conversationsChart').getContext('2d');
+            conversationsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '대화 수',
+                        data: values,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 에러 표시
+        function showError(message) {
+            const errorDiv = document.getElementById('errorDisplay');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // 초기 로드
+        loadData();
+
+        // 30초마다 자동 새로고침
+        setInterval(loadData, 30000);
+    </script>
+</body>
+</html>
