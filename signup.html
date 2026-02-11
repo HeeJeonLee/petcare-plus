@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3분 만에 펫보험 가입 | PetCare+</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Inter:wght@400;500;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #FF6B6B;
+            --secondary: #4ECDC4;
+            --accent: #FFE66D;
+            --dark: #2D3436;
+            --light: #FFF9F0;
+            --cream: #FFF5E6;
+            --success: #00D9A3;
+            --gradient-1: linear-gradient(135deg, #FF6B6B 0%, #FFE66D 100%);
+            --gradient-2: linear-gradient(135deg, #4ECDC4 0%, #95E1D3 100%);
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        /* Progress Bar */
+        .progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .progress-bar {
+            height: 5px;
+            background: var(--gradient-1);
+            transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .progress-step {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #999;
+            transition: all 0.3s;
+        }
+        
+        .progress-step.active {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .progress-step.completed {
+            color: var(--success);
+        }
+        
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        
+        .progress-step.active .step-number {
+            background: var(--gradient-1);
+            color: white;
+        }
+        
+        .progress-step.completed .step-number {
+            background: var(--success);
+            color: white;
+        }
+        
+        /* Container */
+        .container {
+            max-width: 900px;
+            margin: 120px auto 4rem;
+            padding: 0 2rem;
+        }
+        
+        /* Header */
+        .landing-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .landing-header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+        
+        .gradient-text {
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .landing-header p {
+            font-size: 1.25rem;
+            color: #636e72;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .trust-badges {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .trust-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #636e72;
+        }
+        
+        .trust-icon {
+            width: 24px;
+            height: 24px;
+            background: var(--gradient-2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Form Card */
+        .form-card {
+            background: white;
+            border-radius: 30px;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s backwards;
+        }
+        
+        .step {
+            display: none;
+        }
+        
+        .step.active {
+            display: block;
+            animation: fadeInRight 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .step-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .step-description {
+            color: #636e72;
+            margin-bottom: 2rem;
+            font-size: 1.05rem;
+        }
+        
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border: 2px solid #f0f0f0;
+            border-radius: 15px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s;
+            background: var(--cream);
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+        }
+        
+        /* Option Cards */
+        .option-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .option-card {
+            padding: 1.5rem;
+            border: 2px solid #f0f0f0;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            text-align: center;
+            background: white;
+            position: relative;
+        }
+        
+        .option-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        }
+        
+        .option-card.selected {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.05) 0%, rgba(255, 230, 109, 0.05) 100%);
+        }
+        
+        .option-card.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 24px;
+            height: 24px;
+            background: var(--success);
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .option-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .option-title {
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+        
+        .option-description {
+            font-size: 0.85rem;
+            color: #636e72;
+        }
+        
+        /* AI Results */
+        .ai-results {
+            margin: 2rem 0;
+        }
+        
+        .loading-spinner {
+            text-align: center;
+            padding: 3rem;
+        }
+        
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #f0f0f0;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .insurance-card {
+            background: var(--cream);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+        
+        .insurance-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .insurance-card.selected {
+            border-color: var(--primary);
+            background: white;
+        }
+        
+        .insurance-card.recommended {
+            border-color: var(--success);
+        }
+        
+        .recommended-badge {
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            background: var(--gradient-1);
+            color: white;
+            padding: 0.3rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+        }
+        
+        .insurance-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .insurance-company {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--dark);
+        }
+        
+        .insurance-price {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .insurance-features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #636e72;
+        }
+        
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .btn {
+            padding: 1.2rem 3rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            border: none;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .btn-primary {
+            background: var(--gradient-1);
+            color: white;
+            flex: 1;
+            box-shadow: 0 15px 40px rgba(255, 107, 107, 0.3);
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 50px rgba(255, 107, 107, 0.4);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: var(--dark);
+            border: 2px solid #f0f0f0;
+        }
+        
+        .btn-secondary:hover {
+            background: #f0f0f0;
+        }
+        
+        /* Success Screen */
+        .success-screen {
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+        
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            background: var(--gradient-1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            font-size: 3rem;
+            animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        .success-screen h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+        
+        .success-details {
+            background: var(--cream);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: left;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            color: #636e72;
+        }
+        
+        .detail-value {
+            font-weight: 600;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                margin-top: 100px;
+            }
+            
+            .landing-header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .form-card {
+                padding: 2rem 1.5rem;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .progress-steps {
+                padding: 1rem;
+                font-size: 0.8rem;
+            }
+            
+            .option-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress Bar -->
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar" style="width: 33%"></div>
+        <div class="progress-steps">
+            <div class="progress-step active" id="progressStep1">
+                <div class="step-number">1</div>
+                <span>정보 입력</span>
+            </div>
+            <div class="progress-step" id="progressStep2">
+                <div class="step-number">2</div>
+                <span>AI 추천</span>
+            </div>
+            <div class="progress-step" id="progressStep3">
+                <div class="step-number">3</div>
+                <span>가입 완료</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="landing-header">
+            <h1>
+                <span class="gradient-text">3분 만에</span><br>
+                펫보험 가입하기
+            </h1>
+            <p>11개 보험사를 AI가 즉시 비교하고 최적의 보험을 추천해드립니다</p>
+            
+            <div class="trust-badges">
+                <div class="trust-badge">
+                    <div class="trust-icon">🔒</div>
+                    <span>군사급 보안</span>
+                </div>
+                <div class="trust-badge">
+                    <div class="trust-icon">⚡</div>
+                    <span>3분 완료</span>
+                </div>
+                <div class="trust-badge">
+                    <div class="trust-icon">💰</div>
+                    <span>최저가 보장</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Card -->
+        <div class="form-card">
+            <!-- Step 1: Pet Information -->
+            <div class="step active" id="step1">
+                <h2 class="step-title">반려동물 정보</h2>
+                <p class="step-description">간단한 정보만 입력하시면 AI가 최적의 보험을 찾아드립니다</p>
+                
+                <div class="form-group">
+                    <label for="petName">반려동물 이름</label>
+                    <input type="text" id="petName" placeholder="예: 초코" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>반려동물 종류</label>
+                    <div class="option-grid">
+                        <div class="option-card" data-value="dog" onclick="selectPetType('dog')">
+                            <div class="option-icon">🐕</div>
+                            <div class="option-title">강아지</div>
+                        </div>
+                        <div class="option-card" data-value="cat" onclick="selectPetType('cat')">
+                            <div class="option-icon">🐱</div>
+                            <div class="option-title">고양이</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="petAge">나이</label>
+                    <select id="petAge">
+                        <option value="">선택해주세요</option>
+                        <option value="0-1">0-1세</option>
+                        <option value="1-3">1-3세</option>
+                        <option value="3-7">3-7세</option>
+                        <option value="7+">7세 이상</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="petBreed">품종</label>
+                    <input type="text" id="petBreed" placeholder="예: 골든 리트리버">
+                </div>
+                
+                <div class="form-group">
+                    <label for="ownerPhone">연락처</label>
+                    <input type="tel" id="ownerPhone" placeholder="010-1234-5678" required>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="goToStep2()">
+                        AI 추천 받기 →
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: AI Recommendations -->
+            <div class="step" id="step2">
+                <h2 class="step-title">AI 추천 결과</h2>
+                <p class="step-description">11개 보험사를 분석한 결과입니다</p>
+                
+                <div class="ai-results" id="aiResults">
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                        <p>AI가 최적의 보험을 찾고 있습니다...</p>
+                    </div>
+                </div>
+                
+                <div class="button-group" id="step2Buttons" style="display: none;">
+                    <button class="btn btn-secondary" onclick="goToStep1()">← 이전</button>
+                    <button class="btn btn-primary" id="selectButton" onclick="goToStep3()" disabled>
+                        선택 완료
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Success -->
+            <div class="step" id="step3">
+                <div class="success-screen">
+                    <div class="success-icon">🎉</div>
+                    <h2>가입 완료!</h2>
+                    <p style="color: #636e72; font-size: 1.1rem; margin-bottom: 2rem;">
+                        축하합니다! 내일부터 보장이 시작됩니다
+                    </p>
+                    
+                    <div class="success-details" id="successDetails">
+                        <!-- 동적으로 채워짐 -->
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="downloadContract()">
+                            보험증권 다운로드
+                        </button>
+                    </div>
+                    
+                    <p style="color: #636e72; margin-top: 2rem; font-size: 0.9rem;">
+                        이메일과 문자로도 안내를 보내드렸습니다
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let selectedPetType = '';
+        let selectedInsurance = null;
+        let formData = {};
+
+        function selectPetType(type) {
+            selectedPetType = type;
+            document.querySelectorAll('[data-value]').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.querySelector(`[data-value="${type}"]`).classList.add('selected');
+        }
+
+        function updateProgress() {
+            const progressBar = document.getElementById('progressBar');
+            const steps = [
+                document.getElementById('progressStep1'),
+                document.getElementById('progressStep2'),
+                document.getElementById('progressStep3')
+            ];
+            
+            progressBar.style.width = `${(currentStep / 3) * 100}%`;
+            
+            steps.forEach((step, index) => {
+                step.classList.remove('active', 'completed');
+                if (index + 1 < currentStep) {
+                    step.classList.add('completed');
+                } else if (index + 1 === currentStep) {
+                    step.classList.add('active');
+                }
+            });
+        }
+
+        function goToStep1() {
+            document.getElementById('step2').classList.remove('active');
+            document.getElementById('step1').classList.add('active');
+            currentStep = 1;
+            updateProgress();
+        }
+
+        function goToStep2() {
+            // 유효성 검사
+            const petName = document.getElementById('petName').value;
+            const petAge = document.getElementById('petAge').value;
+            const ownerPhone = document.getElementById('ownerPhone').value;
+            
+            if (!petName || !selectedPetType || !petAge || !ownerPhone) {
+                alert('모든 필수 항목을 입력해주세요');
+                return;
+            }
+            
+            // 데이터 저장
+            formData = {
+                petName,
+                petType: selectedPetType,
+                petAge,
+                petBreed: document.getElementById('petBreed').value,
+                ownerPhone
+            };
+            
+            // Step 2로 이동
+            document.getElementById('step1').classList.remove('active');
+            document.getElementById('step2').classList.add('active');
+            currentStep = 2;
+            updateProgress();
+            
+            // AI 분석 시뮬레이션
+            setTimeout(showAIResults, 2000);
+        }
+
+        function showAIResults() {
+            const insurances = [
+                {
+                    company: 'DB손해보험',
+                    price: '45,000',
+                    coverage: '최대 1,000만원',
+                    features: ['수술비 100%', '입원비 90%', '통원비 70%', '특약 무료'],
+                    recommended: true
+                },
+                {
+                    company: '삼성화재',
+                    price: '48,000',
+                    coverage: '최대 900만원',
+                    features: ['수술비 90%', '입원비 80%', '통원비 60%', '24시간 상담']
+                },
+                {
+                    company: 'KB손해보험',
+                    price: '52,000',
+                    coverage: '최대 1,200만원',
+                    features: ['수술비 100%', '입원비 100%', '통원비 80%', '프리미엄 서비스']
+                }
+            ];
+            
+            let html = '';
+            insurances.forEach((ins, index) => {
+                html += `
+                    <div class="insurance-card ${ins.recommended ? 'recommended' : ''}" onclick="selectInsurance(${index})">
+                        ${ins.recommended ? '<div class="recommended-badge">✨ AI 추천</div>' : ''}
+                        <div class="insurance-header">
+                            <div>
+                                <div class="insurance-company">${ins.company}</div>
+                                <div style="color: #636e72; font-size: 0.9rem; margin-top: 0.3rem;">${ins.coverage}</div>
+                            </div>
+                            <div class="insurance-price">₩${ins.price}</div>
+                        </div>
+                        <div class="insurance-features">
+                            ${ins.features.map(f => `
+                                <div class="feature-item">
+                                    <span style="color: var(--success);">✓</span>
+                                    <span>${f}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('aiResults').innerHTML = html;
+            document.getElementById('step2Buttons').style.display = 'flex';
+        }
+
+        function selectInsurance(index) {
+            selectedInsurance = index;
+            document.querySelectorAll('.insurance-card').forEach((card, i) => {
+                if (i === index) {
+                    card.classList.add('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+            });
+            document.getElementById('selectButton').disabled = false;
+        }
+
+        function goToStep3() {
+            if (selectedInsurance === null) {
+                alert('보험을 선택해주세요');
+                return;
+            }
+            
+            document.getElementById('step2').classList.remove('active');
+            document.getElementById('step3').classList.add('active');
+            currentStep = 3;
+            updateProgress();
+            
+            // 성공 화면 데이터
+            const insurances = ['DB손해보험', '삼성화재', 'KB손해보험'];
+            const prices = ['45,000', '48,000', '52,000'];
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() + 1);
+            
+            document.getElementById('successDetails').innerHTML = `
+                <div class="detail-row">
+                    <span class="detail-label">보험사</span>
+                    <span class="detail-value">${insurances[selectedInsurance]}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">반려동물</span>
+                    <span class="detail-value">${formData.petName} (${formData.petType === 'dog' ? '강아지' : '고양이'})</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">월 보험료</span>
+                    <span class="detail-value">₩${prices[selectedInsurance]}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">보장 시작일</span>
+                    <span class="detail-value">${startDate.toLocaleDateString('ko-KR')}</span>
+                </div>
+            `;
+        }
+
+        function downloadContract() {
+            alert('보험증권이 다운로드됩니다.\n(실제 서비스에서는 PDF가 다운로드됩니다)');
+        }
+
+        // 초기 진행바 설정
+        updateProgress();
+    </script>
+</body>
+</html>
